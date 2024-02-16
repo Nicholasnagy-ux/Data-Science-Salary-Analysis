@@ -1,0 +1,374 @@
+---
+title: "Final Project Summary"
+author: "Nicholas Nagy"
+date: "2023-04-04"
+output:  html_document
+bibliography: "`r here::here('lit', 'Final Project Bibliography.bib')`"
+csl: "`r here::here('lit', 'apa.csl')`"
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "doc") })
+nocite: '@*'
+---
+<br/>
+
+------------------------------------------------------------------------
+
+### Dataset Description:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The dataset that was used in this final project contains data science job salaries. The data is originally from [ai-jobs](https://ai-jobs.net/salaries/form/) in collaboration with Ruchi Bhatia, a graduate student at Carnegie Mellon University [@dataset]. The dataset holds a collection of data science jobs with other attributes of the job. These attributes include company size, company location, the employee's place of residence, the ratio of remote workers compared to office workers, along with information about the salary, type of employment, experience of employee, and finally the year the salary was paid.
+
+------------------------------
+
+#### More Details About the dataset:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Going into more specifics about the dataset, we can see that there are four employment types: part-time (PT), full-time (FT), contract (CT), and finally freelance (FL). In addition, employee experience is measured in 4 levels shown below.
+
+- EN: Entry-level / Junior 
+
+- MI: Mid-level / Intermediate 
+
+- SE: Senior-level / Expert 
+
+- EX: Executive-level / Director
+
+The possible two letter entries in the employee experience data column are shown above with exact definitions for each. 
+
+Furthermore, the salary can be represented in different currencies, but luckily we are also given the currency it is represented in, with the conversion to US dollars during the year the salary was paid. This was done by simply using the foreign exchange rate and dividing it by avg. USD rate for the respective year.
+
+The residence of the employee and company for that working year is represented as an ISO 3166 country code. Also something to note, the remote ratio has three binned categories and definitions for each will be displayed below.
+
+- 0: less than 20% remote workers at the company
+
+- 50: greater than 20% but less than 80% remote workers at the company
+
+- 100: greater than 80% remote workers at the company
+
+Finally, the company size is represented with three binned categories which will be explained below.
+
+- S: less than 50 employees
+
+- M: 50 to 250 employees
+
+- L: larger than 250 employees
+
+-------------------
+
+### Dataset Questions:
+
+1. (To fellow classmates pursuing a minor in the field) If you were planning on going into the field of data science, what is the estimated salary?
+
+2. (To people currently working at a company doing data science) Does a larger company pay more? What company size would be best to look for a better salary?
+
+3. (To everyone) How does location correlate with someone's salary? Does remote work correlate with it also?
+
+------------------------
+
+### Packages Used:
+
+```{R Packages, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(ggridges)
+library(ggplot2)
+library(gghalves)
+library(RColorBrewer)
+library(here)
+library(readr)
+library(patchwork)
+library(gifski)
+library(transformr)
+library(gganimate)
+library(devtools)
+library(colorblindr)
+```
+
+--------------------------
+
+### Data:
+
+```{R data}
+ds_salary_data <- read.csv("data/ds_salaries.csv")
+```
+
+---------------
+
+### Plot 1:
+
+#### If you were planning on going into the data science field, what is the estimated salary?
+
+
+```{R plot1, fig.width = 10, fig.height = 10, message = FALSE}
+options(scipen=10000)
+plot1 <- ds_salary_data %>% 
+  mutate(exp_level = ifelse(experience_level == "EN","Entry-level / Junior",ifelse(experience_level == "MI", "Mid-level / Intermediate",ifelse(experience_level == "SE", "Senior-level / Expert", "Executive-level / Director")))) %>% 
+  filter(experience_level != "EN") %>% 
+  ggplot(aes(x = exp_level, y = salary_in_usd, colour = exp_level )) +
+  geom_half_point(side = "l", size = 0.6) +
+  geom_half_boxplot(side = "l", width = 0.7,
+  alpha = 0.3, nudge = 0.05) +
+  geom_half_violin(aes(fill = exp_level), side = "r") +
+  guides(colour = "none")+
+  coord_flip()+
+  theme_bw() +
+  labs(
+    title = "Future Possible Salaries at Higher Levels of Experience",
+    y = "Salary (USD)",
+    x = "",
+    fill = "Experience Level"
+  ) + 
+  scale_fill_OkabeIto() +
+  scale_colour_OkabeIto() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", vjust = 3),
+    axis.text.y = element_text(vjust = 0),
+    axis.title = element_text(face = "bold"),
+    legend.title = element_text(face = "bold"),
+    legend.background = element_rect(colour = "black"),
+    legend.margin = margin(10,10,10,10),
+    plot.caption = element_text(hjust = 0.5, face = "bold", vjust = 3)
+  ) 
+
+median_emp_type <- ds_salary_data %>% 
+  group_by(employment_type) %>% 
+  filter(experience_level == "EN") %>% 
+  summarize(salary_in_usd_median = median(salary_in_usd), sd = sd(salary_in_usd), len = length(salary_in_usd)) %>% 
+  mutate(se = sd / sqrt(len)) %>% 
+  mutate(CI99 = 2.576*se) %>% 
+  mutate(emp_type = ifelse(employment_type == "FT","Full Time",ifelse(employment_type == "PT", "Part Time","Contract")))
+
+emp_type <- ds_salary_data %>% 
+  group_by(employment_type) %>% 
+  filter(experience_level == "EN")
+
+write.csv(median_emp_type, file = "output/median_emp_type.csv")
+write.csv(emp_type, file = "output/emp_type.csv")
+ 
+plot2 <- emp_type %>% 
+  mutate(emp_type = ifelse(employment_type == "FT","Full Time",ifelse(employment_type == "PT", "Part Time","Contract"))) %>% 
+    ggplot(aes(x= emp_type, y = salary_in_usd)) +
+    geom_violin(fill = "lightgrey") +
+    stat_boxplot(geom = "errorbar", linewidth = 1, width = 0.2) +
+    geom_boxplot(colour = "black", width = 0.07, linewidth = 0.5) +
+  geom_boxplot(data = median_emp_type, aes(x = emp_type, y = salary_in_usd_median), width = 0.2) +
+  coord_flip()+
+  theme_bw() +
+  labs(
+    title = "Entry Level Salaries For Data Science",
+    y = "Median Salary (USD)",
+    x = "Employment Type"
+  ) + 
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", vjust = 3),
+    axis.text.y = element_text(vjust = 0),
+    axis.title = element_text(face = "bold"),
+    plot.caption = element_text(hjust = 0.5, face = "bold", vjust = 3),
+    plot.margin = margin(20,20,20,20)
+  )
+
+ggsave("figs/plot1_2.png", plot = plot1)
+ggsave("figs/plot1_1.png", plot = plot2)
+  
+plot2 / plot1
+```
+
+This plot was created by using the data science salary data provided by Kaggle [@dataset]. Data wrangling methods were used to find the median for each of these categories, in which I used tidyverse [@tidyverse]. This plot contains two plots merged together using the patchwork package [@patchwork]. The plots themselves were created using the ggplot2 package, and the first plot shown above uses both a violin plot and a box plot to display the data included in the package [@ggplot2]. The first plot also has some theme modifications which would improve viewability, like changing how the text is formatted on the plot, and because this plot doesn't use colour no other packages were used. In addition, there are no entry level freelance jobs included in this dataset therefore it was omitted from the first plot.  For the second plot I started to use the package gghalves which allows you plot multiple plot types on the same plot; this allowed me to merge a violin plot, box plot and scatter plot [@gghalves]. This is also known as a raincloud plot and it is very effective at displaying distributions and uncertainty. Colour was used in this plot to help distinguish the three categories and the scale that was used is called OkabeIto; originally from colorblindr package [@colorblindr]. I used this scale because I know it works very well for different types of colour blind conditions. Finally for both plots I modified the variable fields to allow for easier understandability, like changing abbreviations to full words. Text formatting in the second plot was improved and the y axis label was removed because it was not required to send the message. Everything else changed in the second plot was for formatting text and labels correctly to make it easier to read. The target audience for this plot was students currently in this course, this plot was designed to show potential data scientists their future salaries if they were to decide to go into this field. The first part of the plot was designed to show initial starting salaries when entering the field in a junior/entry position; showing salaries for different levels of work like part-time and full-time work. The second plot type was designed to show future salaries following a promotion. While the first plot is a simple violin and box plot, which should be easily understandable to students in our current course, the second plot is a raincloud plot which is a very clean plot introduced to students in this course. My main message for this plot was to convince students that data scientists have good salaries, they may not have the best salaries starting out but they improve drastically as you get promoted. Hopefully, this plot also helps convince students to enter this field in the future. I tried my best to show the data in a way students from this class could easily understand and I believe I achieved that.
+
+--------------------
+
+### Plot 2:
+
+#### Does a larger company pay more? What company size would be best to look for a better salary?
+
+```{R plot2, message = FALSE, warning = FALSE}
+options(scipen=10000)
+ds_median_data <- ds_salary_data %>%
+  mutate(cp_size = ifelse(company_size == "S", "Small (0-50 People)",ifelse(company_size == "M", "Medium (50-250 People", "Large (>250 People)"))) %>% 
+  group_by(cp_size) %>% 
+  drop_na(salary_in_usd, cp_size) %>% 
+  summarise(salary_in_usd=median(salary_in_usd))
+  
+write.csv(ds_median_data, file = "output/ds_median_data.csv")
+
+company_size_data <- ds_salary_data %>% 
+  mutate(cp_size = ifelse(company_size == "S", "Small (0-50 People)",ifelse(company_size == "M", "Medium (50-250 People", "Large (>250 People)"))) 
+
+plot3 <- company_size_data %>% 
+  ggplot(aes(x=salary_in_usd, y=cp_size)) +
+  stat_density_ridges(aes(fill = factor(after_stat(quantile))), geom = "density_ridges_gradient", calc_ecdf = TRUE, quantiles = 4, quantile_lines = TRUE) +
+  geom_text(data=ds_median_data, aes(label=paste0("Med:",sprintf("%1.0f", salary_in_usd))), position=position_nudge(x=-14000, y=0.7), colour="white", angle = 90) +
+  theme_bw() +
+  scale_fill_manual(labels = c("0-25%", "25-50%", "50-75%", "75-100%"), values = c("#a6cee3","#1f78b4","#33a02c","#b2df8a")) +
+  labs(
+    title = "Medium Company Size Has The Highest Median Salary",
+    y = "", 
+    x = "Salary (USD)",
+    fill = "Quantile Regions"
+  ) + 
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", vjust = 3),
+    axis.text.y = element_text(vjust = 0),
+    axis.title = element_text(face = "bold"),
+    legend.title = element_text(face = "bold"),
+    legend.background = element_rect(colour = "black"),
+    legend.margin = margin(10,10,10,10),
+    axis.ticks.y=element_blank()
+  )
+
+blind_colour_plot3 <- cvd_grid(plot3)
+
+ggsave("figs/plot2_colourblind_test.png", plot = blind_colour_plot3, width = 20, height = 20)
+
+ggsave("figs/plot2.png", plot = plot3)
+
+plot3
+```
+
+This plot was created by using the data science salary data provided by Kaggle [@dataset]. Data wrangling methods were used to find the median for each of these categories, in which I used Tidyverse [@tidyverse]. Then a plot was created using ggplot2 with salary on the x-axis and company sizes on the y-axis [@ggplot2]. The plot that was used is a stat density ridges plot which comes from the ggridges package [@ggridges]. Then I used text to display the median on the plot, the command for this came from the standard ggplot2 package [@ggplot2]. There are 4 quantile zones on this plot, where each zone contains 25 percent of the data. The color was manually chosen using RColorBrewer, specifically chosen to accommodate colourblind people [@rcolorbrewer]. The theme and the labels were changed to improve the reader's viewability. The final plot was designed to target current data science employee's/workers, which was why I decided to use a density ridge plot because people in data science should easily understand how these plots function. Not only that, but this plot also allows you to easily compare distributions which is essential in this case. This plot was designed to show how a medium sized company (50-250 workers) was a better overall place to work due to a better salary. We can see this by the distribution shapes; small and large companies have positively skewed distributions while the distribution for a medium size company looks more normal. Just by checking out this plot you notice that a medium size company would be the best company to find jobs in because you would have a higher chance to be paid more than other company sizes. So if you're already working in a small or large company,  the best choice would be to try and find a job with a medium sized company if you're looking for a higher salary. This is normally true unless your current job pays more than a medium size job could due to the other distributions being positively skewed, then moving would cause a loss in salary. I also changed some names in the plot to allow for easier understanding of the data, for example I explicitly defined what each company size stands for in the plot. In addition, I wanted to be as accessible as possible so I used colorblindr to check how different types of colour blind people could easily see and understand the plot [@colorblindr]. After thoroughly testing the colour palette I finalized the plot and it is included above.
+
+------------
+
+### Plot 3:
+
+#### How does location correlate with someone's salary? Does remote work correlate with it also?
+
+```{R plot3, warning = FALSE, fig.width = 20, fig.height = 10, message = FALSE}
+options(scipen=10000)
+
+com_location_counts <- ds_salary_data %>% 
+  count(company_location) %>% 
+  arrange(desc(n)) %>% 
+  filter(n > 15)
+
+write.csv(com_location_counts, file = "output/com_Location_counts.csv")
+
+used_data_plot3 <- ds_salary_data %>% 
+  filter(com_location_counts$company_location == company_location)  %>% 
+  mutate(cp_loc = ifelse(company_location == "US", "United States",ifelse(company_location == "CA", "Canada", ifelse(company_location == "GB", "United Kingdom", ifelse(company_location == "IN", "India", "Germany"))))) %>% 
+  mutate(remote = ifelse(remote_ratio == 0, "less than 20% remote workers", ifelse(remote_ratio == 50, "greater than 20% but less than 80% remote workers", "greater than 80% remote workers")))
+
+write.csv(used_data_plot3, file = "output/used_data_plot3.csv")
+
+plot4 <-  used_data_plot3 %>% 
+    ggplot(aes(x = fct_rev(fct_infreq(cp_loc)))) +
+    geom_bar(colour = "black", fill = "lightgrey") + 
+  coord_flip()+
+  theme_bw() +
+  labs(
+    title = "Countries Above The 15 Job Threshold",
+    y = "Number of Salaries Paid",
+    x = ""
+  ) + 
+  theme(
+    axis.text = element_text(size = 20),
+    plot.title = element_text(hjust = 0.5, face = "bold", vjust = 3, size = 20),
+    axis.text.y = element_text(vjust = 0),
+    axis.title = element_text(face = "bold", size = 15),
+    plot.margin = margin(25,25,25,25),
+  ) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,70))
+
+ggsave("figs/plot3_1.png", plot = plot4)
+
+
+med_us_data <- used_data_plot3 %>% 
+  filter(cp_loc == "United States") %>% 
+  group_by(remote) %>% 
+  summarise(sal_med = median(salary_in_usd), sd = sd(salary_in_usd), len = length(salary_in_usd)) %>% 
+  mutate(se = sd / sqrt(len)) %>% 
+  mutate(CI99 = 2.576*se) %>% 
+  mutate(y_loc = runif(3, 0.000002, 0.000007))
+
+write.csv(med_us_data, file = "output/med_us_data.csv")
+
+plot5 <- used_data_plot3 %>% 
+  filter(cp_loc == "United States") %>% 
+  ggplot(aes(x = salary_in_usd)) +
+  geom_density(aes(colour = fct_relevel(remote, "less than 20% remote workers", "greater than 20% but less than 80% remote workers", "greater than 80% remote workers")), fill = "lightgrey", stat = "density", linewidth = 1.5) +
+  theme_bw() +
+  labs(
+    title = "Differences in Salary When it Comes to Remote Work in The United States",
+    y = "Density of Salaries Paid",
+    x = "Salary (USD)",
+    colour = "Remote Work",
+    caption = "The median is shown by the same coloured line in each distribution"
+  ) + 
+  scale_colour_OkabeIto() +
+  geom_vline(data=med_us_data, aes(xintercept=sal_med, colour= fct_relevel(remote, "less than 20% remote workers", "greater than 20% but less than 80% remote workers", "greater than 80% remote workers")),
+             linetype="dashed", size=1) +
+  geom_text(data = med_us_data, aes(label = sal_med, y=y_loc, x=sal_med, colour = fct_relevel(remote, "less than 20% remote workers", "greater than 20% but less than 80% remote workers", "greater than 80% remote workers")), size = 5) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", vjust = 3),
+    axis.text.y = element_text(vjust = 0),
+    axis.title = element_text(face = "bold"),
+    legend.title = element_text(face = "bold"),
+    legend.background = element_rect(colour = "black"),
+    legend.margin = margin(10,10,10,10),
+    plot.margin = margin(25,25,25,25),
+    plot.caption = element_text(hjust = 0.5, face = "bold", vjust = 3)
+  )
+
+median_country_data <- used_data_plot3 %>% 
+  group_by(cp_loc) %>% 
+  summarize(salary_in_usd_median = median(salary_in_usd), sd = sd(salary_in_usd), len = length(salary_in_usd)) %>% 
+  mutate(se = sd / sqrt(len)) %>% 
+  mutate(CI99 = 2.576*se)
+
+write.csv(median_country_data, file = "output/median_country_data.csv")
+
+plot6 <- used_data_plot3 %>% 
+  ggplot(aes(x = fct_relevel(cp_loc, "Germany", "Canada", "India", "United Kingdom", "United States"), y = salary_in_usd)) +
+  geom_violin(fill = "lightgrey") +
+  stat_boxplot(geom = "errorbar", linewidth = 1, width = 0.2) +
+  geom_boxplot(colour = "black", width = 0.07, linewidth = 0.5) +
+  geom_boxplot(data = median_country_data, aes(x = cp_loc, y = salary_in_usd_median), width = 0.2) +
+  coord_flip() +
+  theme_bw() +
+  labs(
+    title = "Differences in Salary When it Comes to Company Location",
+    y = "Salary (USD)",
+    x = ""
+  ) + 
+  scale_fill_discrete_qualitative(palette = "Dark3") +
+  theme(
+    axis.text = element_text(size = 20),
+    plot.title = element_text(hjust = 0.5, face = "bold", vjust = 3, size = 20),
+    axis.text.y = element_text(vjust = 0),
+    axis.title = element_text(face = "bold", size = 15),
+    plot.margin = margin(25,25,25,25)
+  )
+
+ggsave("figs/plot3_2.png", plot = plot6)
+
+anim <- plot5 + transition_states(fct_relevel(remote, "less than 20% remote workers", "greater than 20% but less than 80% remote workers", "greater than 80% remote workers"), transition_length = 2, state_length = 1) +
+             enter_fade() +
+             exit_fade() +
+             shadow_trail(fill = "white", size = 0.75, past = FALSE, future = TRUE) +
+             ggtitle("Differences in Salary When it Comes to Remote Work in The United States" , subtitle = "Now showing companies with {closest_state}")
+
+#animate(anim, duration = 8, fps = 30, width = 800, height = 400, renderer = gifski_renderer())
+#anim_save("figs/plot3_3v2.gif") 
+
+plot7 <- plot4 + plot6
+
+plot7
+```
+
+```{R knit, echo=FALSE}
+knitr::include_graphics("figs/plot3_3v2.gif", error = FALSE)
+```
+
+This plot was created by using the data science salary data provided by Kaggle [@dataset]. Data wrangling methods were used to find countries above 15 entries in the dataset, and also used for finding the median for that data grouped by country using the tidyverse package [@tidyverse]. This plot contains two plots merged together using the patchwork package and a separate animated plot under the two plots [@patchwork]. All the plots were created using the ggplot2 package. The top left plot shown above uses a bar plot to display the data and the top right plot uses both a violin and box plot, which I find very appealing [@ggplot2]. The first plot is very simplistic and shows countries above 15 entries in the dataset and the number of entries for each country. Some stylistic choices where made to make the bar plot more visible to the human eye and country abbreviations were changed to full country names for increased readability. Also, the second plot is an extension of the first plot because the second plot looks into the salaries of each of those countries. In addition, the ordering of the countries for these two plots were modified with the forcats package [@forcats]. This was to improve readability between plots, for example if the location of the country Canada was different between plots it would make it harder to understand when switching between the two. The second plot also had the same theme modifications compared to the plot created in the first question which improved overall viewability. Lastly, the animated plot was created with the package gganimate [@gganimate]. First a static plot was created, I had to use US data because it had vastly more data available than other countries. So by filtering the data to only include the US I was able to check the different salary distributions grouped by the percentage of remote workers at the company. This would allow to you to see a correlation between remote workers and salaries while keeping company location constant. The distributions line colour was used to individualize each category and the colour scale used comes from the colourblindr package to increase the accessibility of the plot [@colorblindr]. Then a median line was created for each distribution with a label explicitly stating the median, the colours for these matching the distribution colours which again used the same colour scale. After that, themes and labels were modified to improve viewability. Finally, an animation was creating transitioning between different percentages of remote work. The creation of the animation was done with the help of the package transformr [@transformr]. In addition, the package gifski was used to create the gif animation [@gifski]. The package devtools was also used to install these packages [@devtools]. These plots put together were designed for a larger audience then my previous plots. I wanted to include as many people as I could which was why I tried to make each plot as simple as possible without hiding too much of the data. This was why I included my first bar plot to show which countries out of the dataset I was investigating, the second plot shows that investigation and the plot below answers a more specific question about salary and remote work. The audience that these plots were designed for don't necessarily need to be from the data science field, which is why I wanted to use common plot types like box, violin, and density plots. Even a quick google search would allow you to understand what these plots are saying with minimal effort. There is definitely a trade-off between hiding data from your audience and making your plot more readable, I find that the plots above limit the amount of data hidden and should be easily readable once you understand how each plot functions. My message I wanted to convey was to show how North American countries have better salaries than other, less wealthy countries in the dataset. Also, I wanted to show how companies with a lot of remote workers have vastly different salaries, which is shown in the animated plot. Companies with a low percentage of remote workers on average paid a lower salary, while companies between 20 and 80 percent remote workers had best possible salary. More studies on this topic are needed before a cause can be determined. Overall, I wanted to split the plots into multiple sections to each individually tell a story, that when put together gives the reader a larger picture of whats going on. This was done to make each plot as simple as possible with some unimportant data hidden to allow for an easier understanding of the overall message.
+
+
+
+--------------------
+
+### Reflection
+
+
+First off, I would like to thank R studio for creating an easy interactive R programming environment [@rstudio]. Also, the package here was used to create a more function tidy project [@here]. Finally the package readr was used to keep this project clean [@readr]. Any other package used indirectly will be cited below. Moving on to the main chunk of the reflection, I do believe that my plots answer the questions I created. The first question was not only answered but expanded upon, not only looking at entry-level salaries for students coming out of university but also looking at possible future earnings. This type of visualization was appropriate for students coming out of university, but may not be appropriate for people already in the industry. For my second question, I wanted to show how varying company sizes correlates with salary. I believe I did this pretty well using a density ridge plot which might be harder to understand than other plots because it is not as well known. The plot is directed to data scientists who would already know and/or have used this plot, making this plot an effective way at displaying data. Finally, for my last question I needed to simplify the plots to make them easier for the general public to understand. Sure the dataset is about data science jobs, but the factors discussed in this question effect multiple different career fields. Therefore, I wanted to make the plots accessible and understandable to the general public without overwhelming the reader. The plot is read left to right and top to bottom, each part of the plot tells a different story, which when put together answers the general question. Also, the dataset used for this project is very reliable - it was properly sourced and information about where the data was collected from was revealed to users. In addition, each variable in the dataset was properly explained with no interpolation needed. One thing I would have loved to improve is the animated part of the third plot. I would have loved to make a clean, animated density plot which showed uncertainty for each of the medians but sadly this was too difficult to create in the time I had, mostly due to the fact that I had to make it as readable as possible. Also, I believe median was the best choice to measure central tendency because nearly all of this dataset is skewed and mean tends to be greatly effected by skewness. Overall, I enjoyed creating this project and learning more about possible future careers for myself in this field.
+
+
+--------------------
+
+<center>Work Cited</center>
+</br>
