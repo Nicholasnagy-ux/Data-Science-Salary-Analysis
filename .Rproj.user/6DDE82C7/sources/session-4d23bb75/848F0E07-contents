@@ -1,9 +1,9 @@
 ---
-title: "Final Project Summary"
+title: "Data Science Salary Analysis"
 author: "Nicholas Nagy"
 date: "2023-04-04"
 output:  html_document
-bibliography: "`r here::here('lit', 'Final Project Bibliography.bib')`"
+bibliography: "`r here::here('lit', 'Data Science Salary Analysis Bibliography.bib')`"
 csl: "`r here::here('lit', 'apa.csl')`"
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding, output_dir = "doc") })
@@ -15,7 +15,7 @@ nocite: '@*'
 
 ### Dataset Description:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The dataset that was used in this final project contains data science job salaries. The data is originally from [ai-jobs](https://ai-jobs.net/salaries/form/) in collaboration with Ruchi Bhatia, a graduate student at Carnegie Mellon University [@dataset]. The dataset holds a collection of data science jobs with other attributes of the job. These attributes include company size, company location, the employee's place of residence, the ratio of remote workers compared to office workers, along with information about the salary, type of employment, experience of employee, and finally the year the salary was paid.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The dataset that was used in this project contains data science job salaries. The data is originally from [ai-jobs](https://ai-jobs.net/salaries/form/) in collaboration with Ruchi Bhatia, a graduate student at Carnegie Mellon University [@dataset]. The dataset holds a collection of data science jobs with other attributes of the job. These attributes include company size, company location, the employee's place of residence, the ratio of remote workers compared to office workers, along with information about the salary, type of employment, experience of employee, and finally the year the salary was paid.
 
 ------------------------------
 

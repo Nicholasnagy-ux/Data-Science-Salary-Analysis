@@ -1,21 +1,19 @@
 ---
 title: "README"
-subtitle: "Data Science Final Project on Data Science Salaries"
+subtitle: "Data Science Project on Data Science Salaries"
 author: "Nicholas Nagy"
 date: "2023-04-04"
 output: html_document
 ---
 
-+ **data/**: Folder containing the data that was used in this final project
++ **data/**: Folder containing the data that was used in this project
     - **"ds_salaries.csv"**: The data set that was used for this project. The data was cited in the main project summary.
     
 <brk> 
 
-+ **doc/**: Folder containing the main RMarkdown file that was created for this final project and any other possible documents.
++ **doc/**: Folder containing the main RMarkdown file that was created for this project and any other possible documents.
     - **"Final Project Summary.Rmd"**: The project summary file in a RMarkdown format.
     - **"Final-Project-Summary.html"**: The project summary file in an html file format.
-    - **"Final Project Presentation.pptx"**: The presentation of the project in a Power Point format.
-    - **"Final Project Presentation.pdf"**: The presentation of the project in a PDF format.
     
 <brk> 
 
@@ -33,8 +31,8 @@ output: html_document
     
 + **lit/**: Folder containing a BibTeX Database which holds the sources used in this project.
     - **"apa.csl"**: A file containing formatting used by RMarkdown to cite sources from the BibTeX Database.
-    - **"Final Project Bibliography.bib"**: A file containing all the sources used in the project.
-    - **"Final Project Bibliography.bib.sav"**: A backup file for the sources used in the project.
+    - **"Data Science Salary Analysis Bibliography.bib"**: A file containing all the sources used in the project.
+    - **"Data Science Salary Analysis Bibliography.bib.sav"**: A backup file for the sources used in the project.
     
 <brk> 
 
@@ -50,5 +48,5 @@ output: html_document
 <brk>
 
 
-+ **Final Project.Rproj**: The R project for this Final project.
++ **Data Science Salary Analysis.Rproj**: The R project for this Final project.
 
