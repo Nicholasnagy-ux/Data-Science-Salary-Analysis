@@ -1,10 +1,14 @@
 ---
 title: "README"
-subtitle: "Data Science Project on Data Science Salaries"
 author: "Nicholas Nagy"
 date: "2023-04-04"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
+subtitle: Data Science Project on Data Science Salaries
 ---
+
++ **ClassificationModel/**:  The folder contains a Python-based machine learning application that uses a Decision Tree Classifier from the sklearn library. The purpose of this application is to predict employment type based on the salary and the remote work ratio. The data used for training and testing the model is read from a CSV file named - **"ds_salaries.csv"**.
 
 + **data/**: Folder containing the data that was used in this project
     - **"ds_salaries.csv"**: The data set that was used for this project. The data was cited in the main project summary.
@@ -13,7 +17,7 @@ output: html_document
 
 + **doc/**: Folder containing the main RMarkdown file that was created for this project and any other possible documents.
     - **"Final Project Summary.Rmd"**: The project summary file in a RMarkdown format.
-    - **"Final-Project-Summary.html"**: The project summary file in an html file format.
+    - **"Final-Project-Summary.pdf"**: The project summary file in an pdf file format.
     
 <brk> 
 
@@ -48,5 +52,5 @@ output: html_document
 <brk>
 
 
-+ **Data Science Salary Analysis.Rproj**: The R project for this Final project.
++ **Data Science Salary Analysis.Rproj**: The R project 
 

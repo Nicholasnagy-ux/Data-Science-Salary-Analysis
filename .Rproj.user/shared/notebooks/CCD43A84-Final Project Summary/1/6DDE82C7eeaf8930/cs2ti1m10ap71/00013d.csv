@@ -1,8 +1,0 @@
-"0",""
-"0","anim <- plot5 + transition_states(fct_relevel(remote, ""less than 20% remote workers"", ""greater than 20% but less than 80% remote workers"", ""greater than 80% remote workers""), transition_length = 2, state_length = 1) +"
-"0","             enter_fade() +"
-"0","             exit_fade() +"
-"0","             shadow_trail(fill = ""white"", size = 0.75, past = FALSE, future = TRUE) +"
-"0","             ggtitle(""Differences in Salary When it Comes to Remote Work in The United States"" , subtitle = ""Now showing companies with {closest_state}"")"
-"0",""
-"0","plot7 <- animate(anim, duration = 8, fps = 30, width = 800, height = 400, renderer = gifski_renderer())"
