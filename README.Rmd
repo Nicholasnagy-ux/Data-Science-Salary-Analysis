@@ -17,7 +17,7 @@ subtitle: Data Science Project on Data Science Salaries
 
 + **doc/**: Folder containing the main RMarkdown file that was created for this project and any other possible documents.
     - **"Final Project Summary.Rmd"**: The project summary file in a RMarkdown format.
-    - **"Final-Project-Summary.pdf"**: The project summary file in an pdf file format.
+    - **"Final-Project-Summary.html"**: The project summary file in an html file format.
     
 <brk> 
 
